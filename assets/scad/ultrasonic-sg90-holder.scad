@@ -20,7 +20,7 @@ module bracket() {
         union() {
             translate ([27.5,0,6])
             rotate([90, 0, 0]) {
-                #cylinder (h=2, r=2.3);
+                cylinder (h=3, r=2.3);
             }
         }
     }
