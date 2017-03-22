@@ -20,7 +20,7 @@ module bracket() {
         union() {
             translate ([27.5,0,6])
             rotate([90, 0, 0]) {
-                cylinder (h=3, r=2.3);
+                cylinder (h=3, r=2.1);
             }
         }
     }
@@ -50,7 +50,7 @@ module holder () {
     translate ([40, 15, 0]) 
         cylinder  (h=2, r=8.5 , $fs=0.1 ); // cil
     translate ([22, 5, 0]) 
-        cube ([10, 4, 2]);  // crystal
+        cube ([10, 4.5, 2]);  // crystal
     translate ([6, 6, 0]) 
         cylinder  (h=2, r=1 , $fs=0.1 );
     translate ([6, 23, 0]) 
