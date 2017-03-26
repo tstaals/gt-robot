@@ -7,7 +7,9 @@ $fn = 100;
 union() {
     case();
     pw(-10,10,0);
-    pw(30,10,0);
+    rotate([0,180,0]) {
+        pw(-40,10,-3);
+    }
 }
 module case() {
     union() {    
@@ -25,10 +27,10 @@ module case() {
                 cube ([26,6,3]);
             }
             translate([6,25,5]) {
-                cylinder(r=0.5,h=10, center=false);
+                cylinder(r=1,h=10, center=false);
             }
             translate([24,25,5]) {
-                cylinder(r=0.5,h=10, center=false);
+                cylinder(r=1,h=10, center=false);
             }
         }
         difference(){
@@ -36,10 +38,10 @@ module case() {
                 cube ([26,6,3]);
             }
             translate([6,10,5]) {
-                cylinder(r=0.5,h=10, center=false);
+                cylinder(r=1,h=10, center=false);
             }
             translate([24,10,5]) {
-                cylinder(r=0.5,h=10, center=false);
+                cylinder(r=1,h=10, center=false);
             }   
         }
     }
@@ -48,6 +50,8 @@ module pw (x,y,z) {
     difference () {
         translate([x,y,z]) 
         cube([10,10,3]);
+        translate ([x-1,y+3,z-1])
+        cube([6,4,5]);
         translate([x+5,y+5,z-2])
         cylinder(r=2,h=10, center=false);
     }
