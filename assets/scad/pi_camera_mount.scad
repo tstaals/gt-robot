@@ -6,9 +6,9 @@ $fn = 100;
 // 
 union() {
     case();
-    pw(-10,10,0);
+    pw(-10,9,0);
     rotate([0,180,0]) {
-        pw(-40,10,-3);
+        pw(-40,9,-3);
     }
 }
 module case() {
@@ -22,37 +22,45 @@ module case() {
                 cube([20,4,15]);
             }
         }
-        difference () {
-            translate([2,22,5]) {
-                cube ([26,6,3]);
+        difference() {
+            union() {
+                difference () {
+                    translate([2,22,5]) {
+                        cube ([26,6,3]);
+                    }
+                    
+                    translate([4,25,5]) {
+                        cylinder(r=1,h=10, center=false);
+                    }
+                    translate([26,25,5]) {
+                        cylinder(r=1,h=10, center=false);
+                    }
+                }
+                difference(){
+                    translate([2,7,5]) {
+                        cube ([26,6,3]);
+                    }
+                    translate([4,10,5]) {
+                        cylinder(r=1,h=10, center=false);
+                    }
+                    translate([26,10,5]) {
+                        cylinder(r=1,h=10, center=false);
+                    }   
+                }
             }
-            translate([6,25,5]) {
-                cylinder(r=1,h=10, center=false);
+            translate([7,5,5]) {
+                cube ([16,24,4]);
             }
-            translate([24,25,5]) {
-                cylinder(r=1,h=10, center=false);
-            }
-        }
-        difference(){
-            translate([2,7,5]) {
-                cube ([26,6,3]);
-            }
-            translate([6,10,5]) {
-                cylinder(r=1,h=10, center=false);
-            }
-            translate([24,10,5]) {
-                cylinder(r=1,h=10, center=false);
-            }   
         }
     }
 }
 module pw (x,y,z) {
     difference () {
         translate([x,y,z]) 
-        cube([10,10,3]);
-        translate ([x-1,y+3,z-1])
+        cube([10,12,3]);
+        translate ([x-1,y+4,z-1])
         cube([6,4,5]);
-        translate([x+5,y+5,z-2])
+        translate([x+5,y+6,z-2])
         cylinder(r=2,h=10, center=false);
     }
 }
