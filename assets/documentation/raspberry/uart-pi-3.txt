@@ -1,5 +1,13 @@
 https://openenergymonitor.org/forum-archive/node/12311.html
 http://www.savagehomeautomation.com/projects/raspberry-pi-installing-a-rs232-serial-port.html
-
-
 https://raspberrypi.stackexchange.com/questions/45570/how-do-i-make-serial-work-on-the-raspberry-pi3
+
+pi@rpi001:/etc/init.d $ sudo systemctl stop serial-getty@ttyAMA0.service
+pi@rpi001:/etc/init.d $ sudo systemctl disable serial-getty@ttyAMA0.service
+
+javac -cp /usr/share/java/RXTXcomm.jar:. TwoWaySerialComm.java
+java -Djava.library.path=/usr/lib/jni -cp /usr/share/java/RXTXcomm.jar:. TwoWaySerialComm
+
+
+sudo ln -s /dev/ttyAMA0 /dev/ttyS80
+"System.setProperty("gnu.io.rxtx.SerialPorts", "/dev/ttyACM0");" i
