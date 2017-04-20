@@ -21,7 +21,7 @@ byte incomingCommand = 0;   // for incoming serial data
 unsigned long lastTime	= 0;
 
 int pingTimer			= 0;
-int pingDelay			= 60;
+int pingDelay			= 50;
 
 Servo rServo;
 
@@ -35,13 +35,10 @@ const byte cMRF = 0x03;
 const byte cMRB = 0x04;
 const byte cFire = 0x05;
 const byte cServo = 0x06;
+const byte cPing = 0x07;
 
-const byte rSensorOne = 0x10;
-const byte rSensorTwo = 0x11;
-
-void temp() {
-
-}
+const byte rSensorOne = 0xA;
+const byte rSensorTwo = 0xB;
 
 ISR (PCINT0_vect) // handle pin change interrupt for D8 to D13 here
 {
@@ -62,6 +59,10 @@ void pciSetup(byte pin)
     PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
 }
 
+void stopFiring() {
+  digitalWrite(pinGF,LOW);
+}
+
 void setup()
 {
   pinMode(pinMLF, OUTPUT);
@@ -78,7 +79,7 @@ void setup()
   pciSetup(pinEchoFront);
   pciSetup(pinEchoServo);
 
-  attachInterrupt(digitalPinToInterrupt(pinGT), temp, RISING);
+  attachInterrupt(digitalPinToInterrupt(pinGT), stopFiring, RISING);
 
   rServo.attach(pinServo);
   delay(50);
@@ -147,10 +148,6 @@ void setServo(byte val) {
   rServo.write(val);
 }
 
-// void temp() {
-//   digitalWrite(pinGF, LOW);
-// }
-
 void loop()
 {
    if (Serial.available()) {
@@ -186,6 +183,9 @@ void loop()
           val = Serial.read();
           setServo(val);
           break;
+        case cPing:
+          sonarTwo.ping();
+          break;
         default:
             break;
        }
@@ -193,29 +193,33 @@ void loop()
    if (sonarOne.isFinished()) {
      int range = sonarOne.getRange();
      if (range > 250) {
-       Serial.write(0);
+       Serial.write((byte) 0);
      }
      else if (range < 15) {
-       Serial.println("auto stop");
+       shutdown();
      }
      else {
-       Serial.write(range);
+       Serial.write(lowByte(range));
      }
 
    }
    if (sonarTwo.isFinished()) {
-     //Serial.println(sonarTwo.getRange());
-   }
+     int range = sonarOne.getRange();
+
+     byte toSend = (range > 250) ? 0x00 : lowByte(range);
+     Serial.write(rSensorTwo);
+     Serial.write(toSend);
+  }
 
    unsigned long time = millis();
    unsigned long dt   = time - lastTime;
-   lastTime 	     = time;
+   lastTime = time;
 
    pingTimer += dt;
-   if(pingTimer > pingDelay){
 
-      pingTimer = 0;
-   	   sonarOne.ping();
-     }
+   if (pingTimer > pingDelay) {
+     pingTimer = 0;
+     sonarOne.ping();
+   }
 
 }

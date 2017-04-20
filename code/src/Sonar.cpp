@@ -17,7 +17,7 @@ void Sonar::ping(){
 
 unsigned int Sonar::getRange() {
   this->_finished=false;
-  return (this->_end-this->_start)/58.2;
+  return (this->_end-this->_start)/58;
 }
 
 void Sonar::_echo_isr(){
