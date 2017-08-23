@@ -2,17 +2,19 @@
 #include <Servo.h>
 #include <Sonar.h>
 
-const int pinMLF = 3; // Motor Left Forward
-const int pinMLB = 9; // Motor Left Back
+const int pinMLF = 11; // Motor Left Forward
+const int pinMLB = 3; // Motor Left Back
 const int pinMRF = 5; // Motor Right Forward
 const int pinMRB = 6; // Motor Right Back
 const int pinGF = 10; // Fire gun
-const int pinGT = 3; // Gun fired
-const int pinServo = 11; // Servo
+const int pinGT = 2; // Gun fired
+const int pinServo = 9; // Servo
 const int pinEchoServo = 8; // Receive echo puls on servo
 const int pinEchoFront = 7; // Reveibe echo puls front
 const int pinTrigServo = 12; // Trigger an puls on servo
 const int pinTrigFront = 13; // Trigger an puls in front
+const int pinLFLED = A4; // right front led
+const int pinRFLED = A5; // left front led
 
 unsigned long serialSpeed = 115200;
 
@@ -21,7 +23,7 @@ byte incomingCommand = 0;   // for incoming serial data
 unsigned long lastTime	= 0;
 
 int pingTimer			= 0;
-int pingDelay			= 50;
+int pingDelay			= 500;
 
 Servo rServo;
 
@@ -40,23 +42,22 @@ const byte cPing = 0x07;
 const byte rSensorOne = 0xA;
 const byte rSensorTwo = 0xB;
 
-ISR (PCINT0_vect) // handle pin change interrupt for D8 to D13 here
-{
+// handle pin change interrupt for D8 to D13 here
+ISR (PCINT0_vect) {
     sonarTwo._echo_isr();
 }
 
-ISR (PCINT2_vect) // handle pin change interrupt for D0 to D7 here
-{
+// handle pin change interrupt for D0 to D7 here
+ISR (PCINT2_vect) {
   if(PCMSK2  & (1 << PD7)) {
     sonarOne._echo_isr();
   }
 }
 
-void pciSetup(byte pin)
-{
-    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
-    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
-    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group
+void pciSetup(byte pin) {
+    *digitalPinToPCMSK(pin) |= bit(digitalPinToPCMSKbit(pin));  // enable pin
+    PCIFR  |= bit(digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+    PCICR  |= bit(digitalPinToPCICRbit(pin)); // enable interrupt for the group
 }
 
 void stopFiring() {
@@ -75,6 +76,8 @@ void setup()
   pinMode(pinEchoFront, INPUT);
   pinMode(pinTrigFront, OUTPUT);
   pinMode(pinEchoServo, INPUT);
+  pinMode(pinLFLED, INPUT);
+  pinMode(pinRFLED, INPUT);
 
   pciSetup(pinEchoFront);
   pciSetup(pinEchoServo);
@@ -82,15 +85,31 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(pinGT), stopFiring, RISING);
 
   rServo.attach(pinServo);
-  delay(50);
+  delay(500);
 
   rServo.write(0);
+  delay(500);
 
-  delay(50);
   rServo.write(180);
 
-  delay(50);
+  delay(500);
   rServo.write(90);
+
+  digitalWrite(pinLFLED, HIGH);
+  digitalWrite(pinRFLED, HIGH);
+  delay(500);
+
+  digitalWrite(pinLFLED, LOW);
+  digitalWrite(pinRFLED, LOW);
+  delay(500);
+
+  digitalWrite(pinLFLED, HIGH);
+  digitalWrite(pinRFLED, HIGH);
+  delay(500);
+
+  digitalWrite(pinLFLED, LOW);
+  digitalWrite(pinRFLED, LOW);
+  delay(500);
 
   Serial.begin(serialSpeed);
   Serial.print("Ready\r\n");
@@ -192,19 +211,24 @@ void loop()
    }
    if (sonarOne.isFinished()) {
      int range = sonarOne.getRange();
+     // If distance is larger then 250cm send 0 to make game intersting;
      if (range > 250) {
        Serial.write((byte) 0);
+       //flashLeds
      }
-     else if (range < 15) {
+     else if (range < 15) {  // Emergency stop when object is detected right in front of robot
+       //turnLedsOn
        shutdown();
      }
      else {
+       // turnLedsOff
        Serial.write(lowByte(range));
      }
-
+     pingTimer = 0;
    }
+   // We only go to distance of 250 to make game interesting;
    if (sonarTwo.isFinished()) {
-     int range = sonarOne.getRange();
+     int range = sonarTwo.getRange();
 
      byte toSend = (range > 250) ? 0x00 : lowByte(range);
      Serial.write(rSensorTwo);
