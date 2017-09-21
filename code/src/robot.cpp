@@ -85,11 +85,11 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(pinGT), stopFiring, RISING);
 
   rServo.attach(pinServo);
-  delay(500);
 
+  delay(500);
   rServo.write(0);
-  delay(500);
 
+  delay(500);
   rServo.write(180);
 
   delay(500);
@@ -127,14 +127,10 @@ void shutdown() {
 
 void setML(bool forward, byte val) {
   if (forward) {
-    Serial.print("forward with val");
-
     analogWrite(pinMLB, LOW);
     analogWrite(pinMLF, val);
   }
   else {
-    Serial.print("backward with val");
-
     analogWrite(pinMLB, val);
     analogWrite(pinMLF, LOW);
   }
@@ -143,14 +139,10 @@ void setML(bool forward, byte val) {
 
 void setMR(bool forward, byte val) {
   if (forward) {
-    Serial.print("forward with val");
-
     analogWrite(pinMRB, LOW);
     analogWrite(pinMRF, val);
   }
   else {
-    Serial.print("backward with val");
-
     analogWrite(pinMRB, val);
     analogWrite(pinMRF, LOW);
   }
@@ -158,12 +150,10 @@ void setMR(bool forward, byte val) {
 }
 
 void fireGun() {
-  Serial.println("firing gun");
   digitalWrite(pinGF, HIGH);
 }
 
 void setServo(byte val) {
-  Serial.println("set servo");
   rServo.write(val);
 }
 
@@ -213,15 +203,14 @@ void loop()
      int range = sonarOne.getRange();
      // If distance is larger then 250cm send 0 to make game intersting;
      if (range > 250) {
+       Serial.write(rSensorOne);
        Serial.write((byte) 0);
-       //flashLeds
      }
-     else if (range < 15) {  // Emergency stop when object is detected right in front of robot
-       //turnLedsOn
+     else if (range >0 && range < 15) {  // Emergency stop when object is detected right in front of robot
        shutdown();
      }
      else {
-       // turnLedsOff
+       Serial.write(rSensorOne);
        Serial.write(lowByte(range));
      }
      pingTimer = 0;
