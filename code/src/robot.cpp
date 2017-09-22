@@ -16,6 +16,9 @@ const int pinTrigFront = 13; // Trigger an puls in front
 const int pinLFLED = A4; // right front led
 const int pinRFLED = A5; // left front led
 
+volatile boolean bRightForward = false;
+volatile boolean bLeftForward = false;
+
 unsigned long serialSpeed = 115200;
 
 byte incomingCommand = 0;   // for incoming serial data
@@ -23,14 +26,13 @@ byte incomingCommand = 0;   // for incoming serial data
 unsigned long lastTime	= 0;
 
 int pingTimer			= 0;
-int pingDelay			= 500;
+int pingDelay			= 100;
 
 Servo rServo;
 
 Sonar sonarOne(pinTrigFront, pinEchoFront);
 Sonar sonarTwo(pinTrigServo, pinEchoServo);
 
-const byte cNull = 0x00;
 const byte cMLF = 0x01;
 const byte cMLB = 0x02;
 const byte cMRF = 0x03;
@@ -38,6 +40,7 @@ const byte cMRB = 0x04;
 const byte cFire = 0x05;
 const byte cServo = 0x06;
 const byte cPing = 0x07;
+const byte cStop = 0x08;
 
 const byte rSensorOne = 0xA;
 const byte rSensorTwo = 0xB;
@@ -112,41 +115,44 @@ void setup()
   delay(500);
 
   Serial.begin(serialSpeed);
-  Serial.print("Ready\r\n");
 
   sonarOne.ping();
   sonarTwo.ping();
+
+  lastTime = millis();
 }
 
 void shutdown() {
-    analogWrite(pinMLF, LOW);
-    analogWrite(pinMLB, LOW);
-    analogWrite(pinMRF, LOW);
-    analogWrite(pinMRB, LOW);
+    analogWrite(pinMLF, 0);
+    analogWrite(pinMLB, 0);
+    analogWrite(pinMRF, 0);
+    analogWrite(pinMRB, 0);
 }
 
 void setML(bool forward, byte val) {
   if (forward) {
+    bLeftForward = true;
     analogWrite(pinMLB, LOW);
     analogWrite(pinMLF, val);
   }
   else {
+    bLeftForward = false;
     analogWrite(pinMLB, val);
     analogWrite(pinMLF, LOW);
   }
-  Serial.println(val);
 }
 
 void setMR(bool forward, byte val) {
   if (forward) {
+    bRightForward = true;
     analogWrite(pinMRB, LOW);
     analogWrite(pinMRF, val);
   }
   else {
+    bRightForward = false;
     analogWrite(pinMRB, val);
     analogWrite(pinMRF, LOW);
   }
-  Serial.println(val);
 }
 
 void fireGun() {
@@ -163,10 +169,8 @@ void loop()
        incomingCommand = Serial.read();
        byte val = 0;
 
-       Serial.print("I received: ");
-       Serial.println(incomingCommand);
        switch (incomingCommand) {
-         case cNull:
+         case cSTOP:
           shutdown();
           break;
          case cMLF:
@@ -199,30 +203,27 @@ void loop()
             break;
        }
    }
+
    if (sonarOne.isFinished()) {
      int range = sonarOne.getRange();
-     // If distance is larger then 250cm send 0 to make game intersting;
-     if (range > 250) {
-       Serial.write(rSensorOne);
-       Serial.write((byte) 0);
+
+     if (range > 0 && range < 15) {  // Emergency stop when object is detected right in front of robot
+       if (bRightForward && bLeftForward) {
+         shutdown();
+      }
      }
-     else if (range >0 && range < 15) {  // Emergency stop when object is detected right in front of robot
-       shutdown();
-     }
-     else {
-       Serial.write(rSensorOne);
-       Serial.write(lowByte(range));
-     }
+
+     //Serial.write(rSensorOne);   // 0A
+     //Serial.write(range);        //
+
      pingTimer = 0;
    }
-   // We only go to distance of 250 to make game interesting;
+
    if (sonarTwo.isFinished()) {
      int range = sonarTwo.getRange();
-
-     byte toSend = (range > 250) ? 0x00 : lowByte(range);
      Serial.write(rSensorTwo);
-     Serial.write(toSend);
-  }
+     Serial.write(range);
+   }
 
    unsigned long time = millis();
    unsigned long dt   = time - lastTime;
