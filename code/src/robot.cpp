@@ -213,8 +213,8 @@ void loop()
       }
      }
 
-     //Serial.write(rSensorOne);   // 0A
-     //Serial.write(range);        //
+     Serial.write(rSensorOne);   // 0A
+     Serial.write(range);        //
 
      pingTimer = 0;
    }
